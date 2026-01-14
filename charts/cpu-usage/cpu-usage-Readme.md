@@ -1,9 +1,7 @@
-Below are **two copy-paste ready READMEs** exactly in the style you asked:
 
 * **README-1 (Maintainer)** = *create repo + create files/folders + create chart + local test + package + push + GitHub Pages publish + verify URL*
 * **README-2 (Tester/New VM)** = *install tools + start cluster + enable metrics + add repo + install chart + run manual job + view logs in one place*
 
-I’m also making sure **shared logs PVC is created only ONE time** (recommended approach), so you don’t hit the “PVC cannot be imported into Helm release” error again.
 
 ---
 
