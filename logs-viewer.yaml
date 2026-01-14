@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logs-viewer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logs-viewer
+  template:
+    metadata:
+      labels:
+        app: logs-viewer
+    spec:
+      containers:
+      - name: viewer
+        image: busybox:1.36
+        command: ["sh", "-c", "echo 'logs-viewer started'; tail -f /dev/null"]
+        volumeMounts:
+        - name: logs
+          mountPath: /logs
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: self-heal-logs-pvc
