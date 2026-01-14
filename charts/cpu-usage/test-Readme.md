@@ -1,4 +1,4 @@
-```
+
 # ✅ README-2.md (Tester/New User: Install Tools → Add Repo → Install Chart → Test → Logs)
 
 ```md
@@ -161,3 +161,6 @@ yaml
 Copy code
 
 ---
+
+If you want, paste your **exact repo name + GitHub username** (case-sensitive), and I’ll rewrite both READMEs with the final URLs already filled (no placeholders).
+::contentRefere
