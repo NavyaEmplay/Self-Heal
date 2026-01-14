@@ -1,0 +1,33 @@
+schedule: "*/5 * * * *"
+
+image:
+  repository: python
+  tag: 3.11-slim
+
+config:
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "10"
+  COOLDOWN_PERIOD: "7200"
+  CPU_THRESHOLD: "60"
+  LOG_DIR: "/opt/logs"
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][CPU]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""
+
+persistence:
+  state:
+    size: 5Mi
+
+# Shared logs PVC (created by this chart)
+sharedLogsPVC:
+  enabled: true
+  name: "self-heal-logs-pvc"
+  size: 100Mi
+  storageClassName: "standard"
