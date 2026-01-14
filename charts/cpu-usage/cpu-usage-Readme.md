@@ -1,89 +1,237 @@
+Below are **two copy-paste ready READMEs** exactly in the style you asked:
 
-Below is the **entire setup from scratch**.
+* **README-1 (Maintainer)** = *create repo + create files/folders + create chart + local test + package + push + GitHub Pages publish + verify URL*
+* **README-2 (Tester/New VM)** = *install tools + start cluster + enable metrics + add repo + install chart + run manual job + view logs in one place*
+
+I’m also making sure **shared logs PVC is created only ONE time** (recommended approach), so you don’t hit the “PVC cannot be imported into Helm release” error again.
 
 ---
 
-## 1) New VM prerequisites + installs (Ubuntu)
+# ✅ README-1.md (Maintainer: Create Repo → Build Chart → Publish Helm Repo)
 
+````md
+# Self-Heal Helm Repo (Maintainer Guide)
+This guide is for **you (the maintainer)** to create the GitHub repo from scratch, build the Helm chart, test it locally, and publish it as a Helm repo using **GitHub Pages**.
+
+---
+
+## 0) What you will build
+✅ A Helm chart `cpu-usage` that:
+- runs as a **CronJob** (default schedule every 5 minutes)
+- checks node CPU using `kubectl top nodes`
+- stores logs in a **shared PVC** (`self-heal-logs-pvc`)
+- optionally sends email (SMTP) if CPU crosses threshold
+- logs are viewable from a **logs-viewer pod** (single place for all logs)
+
+✅ A public Helm repository published at:
+`https://<GITHUB_USERNAME>.github.io/<REPO_NAME>`
+
+Example (yours):
+`https://NavyaEmplay.github.io/Self-Heal`
+
+---
+
+## 1) Prerequisites (Maintainer machine – Ubuntu)
+### 1.1 Install basic tools
 ```bash
 sudo apt-get update -y
-sudo apt-get install -y curl wget git ca-certificates apt-transport-https
+sudo apt-get install -y git curl ca-certificates
+````
 
-# Docker
+### 1.2 Install Helm
+
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+helm version
+```
+
+### 1.3 Install kubectl
+
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
+```
+
+### 1.4 Install Docker + Minikube (for local testing)
+
+```bash
 sudo apt-get install -y docker.io
 sudo usermod -aG docker $USER
 newgrp docker
-docker --version
 
-# kubectl
-curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-rm -f kubectl
-kubectl version --client
-
-# Helm
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-helm version
-
-# Minikube
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
-rm -f minikube-linux-amd64
 minikube version
 ```
 
 ---
 
-## 2) Start Minikube + enable metrics (required for `kubectl top nodes`)
+## 2) Create GitHub Repo (FIRST TIME)
+
+### 2.1 Create repo from GitHub UI
+
+1. Go to GitHub → **New repository**
+2. Name it exactly (example): `Self-Heal`
+3. Set **Public**
+4. Create repository (you can keep it empty)
+
+### 2.2 Clone repo to your machine
 
 ```bash
-minikube start --driver=docker
-kubectl get nodes -o wide
-
-# Metrics Server (needed for kubectl top)
-minikube addons enable metrics-server
-
-# Wait a bit then verify:
-kubectl get pods -n kube-system | grep metrics
-kubectl top nodes
+cd ~
+git clone https://github.com/<GITHUB_USERNAME>/<REPO_NAME>.git
+cd <REPO_NAME>
 ```
 
-If `kubectl top nodes` works, your script will work.
-
----
-
-## 3) Create repo structure + Helm chart
+Example:
 
 ```bash
-mkdir -p ~/self-heal-helm-repo
-cd ~/self-heal-helm-repo
-
-mkdir -p charts docs helm-repo
-cd charts
-
-helm create cpu-usage
-```
-
-Remove default templates (we’ll use only `all.yaml`):
-
-```bash
-rm -rf cpu-usage/templates/*
-rm -rf cpu-usage/charts
-mkdir -p cpu-usage/templates
-mkdir -p cpu-usage/scripts
+git clone https://github.com/NavyaEmplay/Self-Heal.git
+cd Self-Heal
 ```
 
 ---
 
-## 4) Add scripts
+## 3) Create folders and files (FULL project structure)
 
-### 4.1 `scripts/checkcpu.sh`
+### 3.1 Create folders
 
 ```bash
-nano cpu-usage/scripts/checkcpu.sh
+mkdir -p charts/cpu-usage/templates charts/cpu-usage/scripts
+mkdir -p docs helm-repo
 ```
 
-Paste:
+Your structure becomes:
+
+```
+Self-Heal/
+├─ charts/
+│  └─ cpu-usage/
+│     ├─ Chart.yaml
+│     ├─ values.yaml
+│     ├─ templates/
+│     │  └─ all.yaml
+│     └─ scripts/
+│        ├─ checkcpu.sh
+│        └─ utils.sh
+├─ docs/
+├─ helm-repo/
+├─ shared-logs-pvc.yaml
+└─ logs-viewer.yaml
+```
+
+---
+
+## 4) Add ALL files (copy-paste these exactly)
+
+### 4.1 charts/cpu-usage/Chart.yaml
+
+```yaml
+apiVersion: v2
+name: cpu-usage
+description: Self-heal CPU monitoring CronJob (kubectl top nodes)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+```
+
+### 4.2 charts/cpu-usage/values.yaml
+
+```yaml
+schedule: "*/5 * * * *"
+
+image:
+  repository: python
+  tag: 3.11-slim
+
+config:
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "10"
+  COOLDOWN_PERIOD: "7200"
+  CPU_THRESHOLD: "60"
+  LOG_DIR: "/opt/logs"
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][CPU]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""
+
+persistence:
+  state:
+    size: 5Mi
+
+# ✅ IMPORTANT: shared logs pvc should be created ONE TIME manually (recommended)
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"
+```
+
+### 4.3 charts/cpu-usage/scripts/utils.sh
+
+```bash
+#!/bin/bash
+
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$1] $2" | tee -a "$LOG_DIR/cpucheck_$(date '+%Y-%m-%d').log"
+}
+
+retry_with_config() {
+  local cmd=$1 retries=$2 interval=$3 count=0
+  until $cmd; do
+    count=$((count+1))
+    [ $count -ge $retries ] && return 1
+    log "DEBUG" "Retry $count/$retries failed, sleeping $interval"
+    sleep $interval
+  done
+  return 0
+}
+
+can_alert() {
+  local cooldown=$1 file=/opt/state/last_alert now=$(date +%s)
+  if [ -f $file ]; then
+    last=$(<$file)
+    if (( last + cooldown > now )); then
+      remain=$(( last + cooldown - now ))
+      log "INFO" "Cooldown active, skipping alert (wait ${remain}s more)"
+      return 1
+    fi
+  fi
+  echo $now > $file
+  return 0
+}
+
+send_email() {
+  local node=$1
+  local usage=$2
+
+  SMTP_PASSWORD="$(cat "$SMTP_PASSWORD_FILE" 2>/dev/null || true)"
+
+  if [ "$EMAIL_ENABLED" = "true" ]; then
+    SUBJECT="$EMAIL_SUBJECT_PREFIX High CPU Alert on $node"
+    BODY="ALERT: Node $node CPU=$usage% (Threshold=$CPU_THRESHOLD%)"
+
+    RCPT_ARGS=()
+    for rcpt in $(echo $EMAIL_TO | tr ',' ' '); do
+      RCPT_ARGS+=( --mail-rcpt "$rcpt" )
+    done
+
+    curl --silent --show-error --fail \
+      --url "smtp://$SMTP_HOST:$SMTP_PORT" \
+      --ssl-reqd \
+      --mail-from "$EMAIL_FROM" \
+      "${RCPT_ARGS[@]}" \
+      --user "$SMTP_USERNAME:$SMTP_PASSWORD" \
+      -T <(echo -e "From: $EMAIL_FROM\nTo: $EMAIL_TO\nSubject: $SUBJECT\n\n$BODY")
+  fi
+}
+```
+
+### 4.4 charts/cpu-usage/scripts/checkcpu.sh
 
 ```bash
 #!/bin/bash
@@ -140,174 +288,13 @@ else
 fi
 ```
 
-```bash
-chmod +x cpu-usage/scripts/checkcpu.sh
-```
+### 4.5 charts/cpu-usage/templates/all.yaml
 
-### 4.2 `scripts/utils.sh`
-
-```bash
-nano cpu-usage/scripts/utils.sh
-```
-
-Paste:
-
-```bash
-#!/bin/bash
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$1] $2" | tee -a "$LOG_DIR/cpucheck_$(date '+%Y-%m-%d').log"
-}
-
-retry_with_config() {
-  local cmd=$1 retries=$2 interval=$3 count=0
-  until $cmd; do
-    count=$((count+1))
-    [ $count -ge $retries ] && return 1
-    log "DEBUG" "Retry $count/$retries failed, sleeping $interval"
-    sleep $interval
-  done
-  return 0
-}
-
-can_alert() {
-  local cooldown=$1 file=/opt/state/last_alert now=$(date +%s)
-  if [ -f $file ]; then
-    last=$(<$file)
-    if (( last + cooldown > now )); then
-      remain=$(( last + cooldown - now ))
-      log "INFO" "Cooldown active, skipping alert (wait ${remain}s more)"
-      return 1
-    fi
-  fi
-  echo $now > $file
-  return 0
-}
-
-send_email() {
-  local node=$1
-  local usage=$2
-
-  SMTP_PASSWORD="$(cat "$SMTP_PASSWORD_FILE" 2>/dev/null || true)"
-
-  if [ "$EMAIL_ENABLED" = "true" ]; then
-    SUBJECT="$EMAIL_SUBJECT_PREFIX High CPU Alert on $node"
-    BODY="ALERT: Node $node CPU=$usage% (Threshold=$CPU_THRESHOLD%)"
-
-    RCPT_ARGS=()
-    for rcpt in $(echo $EMAIL_TO | tr ',' ' '); do
-      RCPT_ARGS+=( --mail-rcpt "$rcpt" )
-    done
-
-    curl --silent --show-error --fail \
-      --url "smtp://$SMTP_HOST:$SMTP_PORT" \
-      --ssl-reqd \
-      --mail-from "$EMAIL_FROM" \
-      "${RCPT_ARGS[@]}" \
-      --user "$SMTP_USERNAME:$SMTP_PASSWORD" \
-      -T <(echo -e "From: $EMAIL_FROM\nTo: $EMAIL_TO\nSubject: $SUBJECT\n\n$BODY")
-  fi
-}
-```
-
-```bash
-chmod +x cpu-usage/scripts/utils.sh
-```
-
----
-
-## 5) Update Chart.yaml (simple)
-
-```bash
-nano cpu-usage/Chart.yaml
-```
-
-Use:
+✅ You asked: “**helpers inside all.yaml itself**” → done below.
 
 ```yaml
-apiVersion: v2
-name: cpu-usage
-description: Self-heal CPU monitoring CronJob (kubectl top nodes)
-type: application
-version: 0.1.0
-appVersion: "1.0.0"
-```
-
----
-
-## 6) values.yaml (NEW: chart creates logs PVC too, so no manual PVC needed)
-
-```bash
-nano cpu-usage/values.yaml
-```
-
-Paste:
-
-```yaml
-schedule: "*/5 * * * *"
-
-image:
-  repository: python
-  tag: 3.11-slim
-
-config:
-  RETRY_COUNT: "3"
-  RETRY_INTERVAL: "10"
-  COOLDOWN_PERIOD: "7200"
-  CPU_THRESHOLD: "60"
-  LOG_DIR: "/opt/logs"
-  EMAIL_ENABLED: "true"
-  EMAIL_SUBJECT_PREFIX: "[Self-Heal][CPU]"
-  EMAIL_FROM: "qa_emplay@emplay.net"
-  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
-  SMTP_HOST: "smtp.gmail.com"
-  SMTP_PORT: "587"
-  SMTP_USERNAME: "qa_emplay@emplay.net"
-
-secrets:
-  SMTP_PASSWORD: ""
-
-persistence:
-  state:
-    size: 5Mi
-
-# Shared logs PVC (created by this chart)
-sharedLogsPVC:
-  enabled: true
-  name: "self-heal-logs-pvc"
-  size: 100Mi
-  storageClassName: "standard"
-```
-
----
-
-## 7) ✅ Single template file: `templates/all.yaml` (helpers inside the same file)
-
-```bash
-nano cpu-usage/templates/all.yaml
-```
-
-Paste this **entire file**:
-
-```yaml
-{{/*
-Helpers inside all.yaml (no _helpers.tpl needed)
-*/}}
-
-{{- define "cpu-usage.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
 {{- define "cpu-usage.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 ---
@@ -359,21 +346,6 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistence.state.size }}
-
-{{- if .Values.sharedLogsPVC.enabled }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ .Values.sharedLogsPVC.name }}
-  namespace: {{ .Release.Namespace }}
-spec:
-  accessModes: ["ReadWriteOnce"]
-  storageClassName: {{ .Values.sharedLogsPVC.storageClassName | quote }}
-  resources:
-    requests:
-      storage: {{ .Values.sharedLogsPVC.size }}
-{{- end }}
 
 ---
 apiVersion: v1
@@ -470,111 +442,174 @@ spec:
               secretName: {{ include "cpu-usage.fullname" . }}-smtp
 ```
 
-✅ Now you have **only one template file** and it contains the helpers too.
+### 4.6 shared-logs-pvc.yaml  (ONE TIME per cluster)
 
----
-
-## 8) Lint + Install (test)
-
-```bash
-cd ~/self-heal-helm-repo/charts/cpu-usage
-helm lint .
-
-# install to default namespace
-helm install cpu-usage . -n default --create-namespace \
-  --set-string secrets.SMTP_PASSWORD="YOUR_APP_PASSWORD"
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: self-heal-logs-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  storageClassName: standard
 ```
 
-Check resources:
+### 4.7 logs-viewer.yaml (ONE TIME per cluster)
 
-```bash
-kubectl get cronjob -n default
-kubectl get pvc -n default | grep -E "self-heal-logs-pvc|cpu-usage"
-kubectl get pods -n default
-```
-
----
-
-## 9) Manual test run + logs in terminal
-
-Create job from cronjob:
-
-```bash
-kubectl create job --from=cronjob/cpu-usage-cpu-usage-cron cpu-usage-manual -n default
-```
-
-Watch pod:
-
-```bash
-kubectl get pods -n default -l job-name=cpu-usage-manual -w
-```
-
-Show logs:
-
-```bash
-kubectl logs -n default -l job-name=cpu-usage-manual --all-containers=true
-```
-
-If it completed already, logs still work:
-
-```bash
-kubectl logs -n default job/cpu-usage-manual
-```
-
----
-
-## 10) Optional: Publish Helm repo to GitHub Pages (clean way)
-
-From repo root:
-
-```bash
-cd ~/self-heal-helm-repo
-rm -rf helm-repo/* docs/*
-helm package charts/cpu-usage -d helm-repo
-helm repo index helm-repo --url https://<YOUR_GITHUB_USERNAME>.github.io/self-heal-helm-repo
-cp -r helm-repo/* docs/
-```
-
-Push to GitHub:
-
-```bash
-git init
-git add .
-git commit -m "cpu-usage chart + helm repo"
-git branch -M main
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/self-heal-helm-repo.git
-git push -u origin main
-```
-
-Enable Pages:
-
-* GitHub repo → **Settings → Pages**
-* Source: **Deploy from a branch**
-* Branch: `main`, folder: `/docs`
-
-Test install from GitHub:
-
-```bash
-helm repo add selfheal https://<YOUR_GITHUB_USERNAME>.github.io/self-heal-helm-repo
-helm repo update
-helm search repo selfheal
-helm install cpu-usage selfheal/cpu-usage -n default --create-namespace \
-  --set-string secrets.SMTP_PASSWORD="YOUR_APP_PASSWORD"
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logs-viewer
+  namespace: default
+  labels:
+    app: logs-viewer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logs-viewer
+  template:
+    metadata:
+      labels:
+        app: logs-viewer
+    spec:
+      containers:
+      - name: viewer
+        image: busybox:1.36
+        command: ["sh","-c","sleep 365000d"]
+        volumeMounts:
+        - name: logs
+          mountPath: /opt/logs
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: self-heal-logs-pvc
 ```
 
 ---
 
-### Small note (why you saw “Metrics API not available”)
+## 5) Local test (Maintainer)
 
-That happens **only** when metrics-server is missing. After:
+### 5.1 Start cluster + metrics
 
 ```bash
+minikube start --driver=docker
 minikube addons enable metrics-server
 kubectl top nodes
 ```
 
-your script will start showing real node CPU values.
+### 5.2 Apply ONE TIME objects (shared logs + viewer)
+
+```bash
+kubectl apply -f shared-logs-pvc.yaml
+kubectl apply -f logs-viewer.yaml
+kubectl get pvc -n default | grep self-heal-logs-pvc
+kubectl get pods -n default -l app=logs-viewer
+```
+
+### 5.3 Lint + install chart locally
+
+```bash
+cd charts/cpu-usage
+helm lint .
+
+helm uninstall cpu-usage -n default 2>/dev/null || true
+helm install cpu-usage . -n default --create-namespace \
+  --set-string secrets.SMTP_PASSWORD="YOUR_SMTP_APP_PASSWORD"
+```
+
+### 5.4 Manual run test (don’t wait for cron)
+
+```bash
+JOB="cpu-usage-manual-$(date +%Y%m%d-%H%M%S)"
+kubectl create job --from=cronjob/cpu-usage-cpu-usage-cron "$JOB" -n default
+POD=$(kubectl get pods -n default -l job-name="$JOB" -o jsonpath='{.items[0].metadata.name}')
+kubectl logs -n default -f "$POD"
+```
+
+### 5.5 Check logs from single place (logs-viewer)
+
+```bash
+kubectl exec -it -n default deploy/logs-viewer -- sh
+ls -lh /opt/logs
+tail -f /opt/logs/cpucheck_$(date +%Y-%m-%d).log
+```
 
 ---
 
-If you want, paste your `<YOUR_GITHUB_USERNAME>` and I’ll rewrite the publish commands with your exact final URL filled in (no placeholders).
+## 6) Build Helm repo artifacts (tgz + index.yaml)
+
+From repo root:
+
+```bash
+cd <REPO_NAME>
+
+mkdir -p helm-repo docs
+rm -rf helm-repo/* docs/*
+
+for d in charts/*; do
+  [ -d "$d" ] && helm package "$d" -d helm-repo
+done
+
+helm repo index helm-repo --url https://<GITHUB_USERNAME>.github.io/<REPO_NAME>
+
+cp -r helm-repo/* docs/
+touch docs/.nojekyll
+
+ls -lh docs
+```
+
+You must see in `docs/`:
+
+* `index.yaml`
+* `cpu-usage-0.1.0.tgz`
+
+---
+
+## 7) Push everything to GitHub
+
+```bash
+git add .
+git commit -m "cpu-usage chart + publish helm repo"
+git push origin main
+```
+
+---
+
+## 8) Enable GitHub Pages (Publishing)
+
+GitHub Repo → **Settings → Pages**
+
+* Source: Deploy from branch
+* Branch: `main`
+* Folder: `/docs`
+  Save.
+
+Now your Helm repo URL becomes:
+`https://<GITHUB_USERNAME>.github.io/<REPO_NAME>`
+
+Example:
+`https://NavyaEmplay.github.io/Self-Heal`
+
+---
+
+## 9) Final verification (Helm repo must work)
+
+From any machine:
+
+```bash
+helm repo add self-heal https://<GITHUB_USERNAME>.github.io/<REPO_NAME>
+helm repo update
+helm search repo self-heal
+```
+
+Done ✅
+
+````
+
