@@ -13,7 +13,7 @@ This guide is for a **new person / new VM** to install required tools, connect t
 - Kubernetes cluster available:
   - Either minikube OR EKS/AKS etc.
 - `kubectl` configured and working:
-  ```bash
+```bash
   kubectl get nodes
 ```
 2) Install required tools (Ubuntu)
