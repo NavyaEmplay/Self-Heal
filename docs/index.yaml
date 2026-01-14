@@ -3,12 +3,12 @@ entries:
   cpu-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-14T15:18:01.230405152+05:30"
+    created: "2026-01-14T16:40:56.474689277+05:30"
     description: Self-heal CPU monitoring CronJob (kubectl top nodes)
     digest: 88872bec3a9480c4c3f5ac6d0fb7cc4c8d8bb3ea101662004c05410e57afcd02
     name: cpu-usage
     type: application
     urls:
-    - https://NavyaEmplay.github.io/self-heal-helm/cpu-usage-0.1.0.tgz
+    - https://NavyaEmplay.github.io/Self-Heal/cpu-usage-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-14T15:18:01.23005845+05:30"
+generated: "2026-01-14T16:40:56.474324305+05:30"
