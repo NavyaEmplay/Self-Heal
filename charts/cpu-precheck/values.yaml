@@ -1,0 +1,29 @@
+schedule: "*/10 * * * *"
+
+image:
+  repository: python
+  tag: 3.11-slim
+  pullPolicy: IfNotPresent
+
+# Packages installed at runtime inside the CronJob container
+runtimePackages:
+  apt:
+    - curl
+    - ca-certificates
+
+kubectlInstall: true
+
+config:
+  RETRY_COUNT: "1"
+  RETRY_INTERVAL: "5"
+  COOLDOWN_PERIOD: "3600"
+  CPU_THRESHOLD: "65"
+  LOG_DIR: "/opt/logs"
+
+# Shared logs PVC (ONE TIME per cluster, reused by all charts)
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"
+
+persistence:
+  state:
+    size: 5Mi

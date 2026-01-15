@@ -1,0 +1,149 @@
+{{/*
+Helpers inside all.yaml (no _helpers.tpl needed)
+*/}}
+
+{{- define "cpu-precheck.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "cpu-precheck.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-scripts
+  namespace: {{ .Release.Namespace }}
+data:
+  config.env: |
+    RETRY_COUNT={{ .Values.config.RETRY_COUNT }}
+    RETRY_INTERVAL={{ .Values.config.RETRY_INTERVAL }}
+    COOLDOWN_PERIOD={{ .Values.config.COOLDOWN_PERIOD }}
+    CPU_THRESHOLD={{ .Values.config.CPU_THRESHOLD }}
+    LOG_DIR={{ .Values.config.LOG_DIR }}
+
+  utils.sh: |
+{{ .Files.Get "scripts/utils.sh" | indent 4 }}
+
+  checkcpu_precheck.sh: |
+{{ .Files.Get "scripts/checkcpu_precheck.sh" | indent 4 }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-state
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.persistence.state.size }}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-role
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get","list"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes"]
+  verbs: ["get","list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "cpu-precheck.fullname" . }}-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "cpu-precheck.fullname" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-cron
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 120
+      ttlSecondsAfterFinished: 300
+      template:
+        spec:
+          serviceAccountName: {{ include "cpu-precheck.fullname" . }}-sa
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            fsGroup: 0
+          containers:
+          - name: cpu-precheck
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command: ["/bin/bash","-c"]
+            args:
+              - |
+                set -e
+                apt-get update
+                apt-get install -y {{ join " " .Values.runtimePackages.apt }}
+{{- if .Values.kubectlInstall }}
+                curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+{{- end }}
+                bash /opt/scripts/checkcpu_precheck.sh
+            volumeMounts:
+            - name: scripts
+              subPath: checkcpu_precheck.sh
+              mountPath: /opt/scripts/checkcpu_precheck.sh
+            - name: scripts
+              subPath: config.env
+              mountPath: /opt/config/config.env
+            - name: scripts
+              subPath: utils.sh
+              mountPath: /opt/utils/utils.sh
+            - name: state
+              mountPath: /opt/state
+            - name: logs
+              mountPath: /opt/logs
+          volumes:
+          - name: scripts
+            configMap:
+              name: {{ include "cpu-precheck.fullname" . }}-scripts
+          - name: state
+            persistentVolumeClaim:
+              claimName: {{ include "cpu-precheck.fullname" . }}-state
+          - name: logs
+            persistentVolumeClaim:
+              claimName: {{ .Values.sharedLogsPVC.name }}

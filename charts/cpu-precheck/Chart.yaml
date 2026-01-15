@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cpu-precheck
+description: Precheck CPU monitoring CronJob (kubectl top nodes)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

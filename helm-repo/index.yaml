@@ -1,14 +1,25 @@
 apiVersion: v1
 entries:
+  cpu-precheck:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-15T15:58:31.847591394+05:30"
+    description: Precheck CPU monitoring CronJob (kubectl top nodes)
+    digest: 53a518f65f062076bb0cd9dfc214163c1a73272cce85deba91f72a1419fbf66f
+    name: cpu-precheck
+    type: application
+    urls:
+    - https://NavyaEmplay.github.io/Self-Heal/cpu-precheck-0.1.0.tgz
+    version: 0.1.0
   cpu-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-14T15:18:01.230405152+05:30"
+    created: "2026-01-15T15:58:31.847923342+05:30"
     description: Self-heal CPU monitoring CronJob (kubectl top nodes)
-    digest: 88872bec3a9480c4c3f5ac6d0fb7cc4c8d8bb3ea101662004c05410e57afcd02
+    digest: 3d82e34532568df69664046bc07b097baaa15e5aba216739411f1a76bf2dbb0c
     name: cpu-usage
     type: application
     urls:
-    - https://NavyaEmplay.github.io/self-heal-helm/cpu-usage-0.1.0.tgz
+    - https://NavyaEmplay.github.io/Self-Heal/cpu-usage-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-14T15:18:01.23005845+05:30"
+generated: "2026-01-15T15:58:31.847287229+05:30"
