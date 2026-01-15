@@ -1,29 +1,35 @@
-schedule: "*/10 * * * *"
+schedule: "*/5 * * * *"
 
 image:
   repository: python
   tag: 3.11-slim
-  pullPolicy: IfNotPresent
-
-# Packages installed at runtime inside the CronJob container
-runtimePackages:
-  apt:
-    - curl
-    - ca-certificates
-
-kubectlInstall: true
 
 config:
-  RETRY_COUNT: "1"
-  RETRY_INTERVAL: "5"
-  COOLDOWN_PERIOD: "3600"
-  CPU_THRESHOLD: "65"
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "10"
+  COOLDOWN_PERIOD: "7200"
+  CPU_THRESHOLD: "60"
   LOG_DIR: "/opt/logs"
 
-# Shared logs PVC (ONE TIME per cluster, reused by all charts)
-sharedLogsPVC:
-  name: "self-heal-logs-pvc"
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][CPU-PRECHECK]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""
 
 persistence:
   state:
     size: 5Mi
+
+# Shared logs PVC (created by this chart)
+sharedLogsPVC:
+  enabled: false
+  name: "self-heal-logs-pvc"
+  size: 100Mi
+  storageClassName: "standard"

@@ -33,11 +33,30 @@ data:
     CPU_THRESHOLD={{ .Values.config.CPU_THRESHOLD }}
     LOG_DIR={{ .Values.config.LOG_DIR }}
 
+    EMAIL_ENABLED={{ .Values.config.EMAIL_ENABLED }}
+    EMAIL_SUBJECT_PREFIX="{{ .Values.config.EMAIL_SUBJECT_PREFIX }}"
+    EMAIL_FROM={{ .Values.config.EMAIL_FROM }}
+    EMAIL_TO={{ .Values.config.EMAIL_TO }}
+    SMTP_HOST={{ .Values.config.SMTP_HOST }}
+    SMTP_PORT={{ .Values.config.SMTP_PORT }}
+    SMTP_USERNAME={{ .Values.config.SMTP_USERNAME }}
+    SMTP_PASSWORD_FILE=/opt/secret/SMTP_PASSWORD
+
   utils.sh: |
 {{ .Files.Get "scripts/utils.sh" | indent 4 }}
 
-  checkcpu_precheck.sh: |
-{{ .Files.Get "scripts/checkcpu_precheck.sh" | indent 4 }}
+  cpu_precheck.sh: |
+{{ .Files.Get "scripts/cpu_precheck.sh" | indent 4 }}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "cpu-precheck.fullname" . }}-smtp
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  SMTP_PASSWORD: {{ .Values.secrets.SMTP_PASSWORD | quote }}
 
 ---
 apiVersion: v1
@@ -50,6 +69,21 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistence.state.size }}
+
+{{- if .Values.sharedLogsPVC.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.sharedLogsPVC.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: {{ .Values.sharedLogsPVC.storageClassName | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.sharedLogsPVC.size }}
+{{- end }}
 
 ---
 apiVersion: v1
@@ -98,35 +132,26 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 1
-      activeDeadlineSeconds: 120
       ttlSecondsAfterFinished: 300
       template:
         spec:
           serviceAccountName: {{ include "cpu-precheck.fullname" . }}-sa
           restartPolicy: OnFailure
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-            fsGroup: 0
           containers:
           - name: cpu-precheck
             image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-            imagePullPolicy: {{ .Values.image.pullPolicy }}
             command: ["/bin/bash","-c"]
             args:
               - |
                 set -e
-                apt-get update
-                apt-get install -y {{ join " " .Values.runtimePackages.apt }}
-{{- if .Values.kubectlInstall }}
-                curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-{{- end }}
-                bash /opt/scripts/checkcpu_precheck.sh
+                apt-get update && apt-get install -y curl ca-certificates && \
+                curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+                install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
+                bash /opt/scripts/cpu_precheck.sh
             volumeMounts:
             - name: scripts
-              subPath: checkcpu_precheck.sh
-              mountPath: /opt/scripts/checkcpu_precheck.sh
+              subPath: cpu_precheck.sh
+              mountPath: /opt/scripts/cpu_precheck.sh
             - name: scripts
               subPath: config.env
               mountPath: /opt/config/config.env
@@ -137,6 +162,9 @@ spec:
               mountPath: /opt/state
             - name: logs
               mountPath: /opt/logs
+            - name: smtpsecret
+              mountPath: /opt/secret
+              readOnly: true
           volumes:
           - name: scripts
             configMap:
@@ -147,3 +175,6 @@ spec:
           - name: logs
             persistentVolumeClaim:
               claimName: {{ .Values.sharedLogsPVC.name }}
+          - name: smtpsecret
+            secret:
+              secretName: {{ include "cpu-precheck.fullname" . }}-smtp
