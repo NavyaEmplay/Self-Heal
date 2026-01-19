@@ -3,9 +3,9 @@ entries:
   cpu-precheck:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-19T11:29:08.170317685+05:30"
+    created: "2026-01-19T13:25:31.358499713+05:30"
     description: Precheck CPU monitoring CronJob (kubectl top nodes)
-    digest: 665c13af42685312c81fdb18faeced487a15c676b1144a06a1190674395c631c
+    digest: c507485e4ecfa2af2bc9f55a4fdaea6ce787fae074798f4cc80f3b8619be40d7
     name: cpu-precheck
     type: application
     urls:
@@ -14,12 +14,23 @@ entries:
   cpu-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-19T11:29:08.170607185+05:30"
+    created: "2026-01-19T13:25:31.35878639+05:30"
     description: Self-heal CPU monitoring CronJob (kubectl top nodes)
-    digest: 393e4497e9c3b37b5c1475eff03c08cfa35f1019372ac232717a7766f097d8ea
+    digest: 6b39a0e7553d6dcc79ab39e4429acd369a945d63e132f2db857fab0ebc7fd757
     name: cpu-usage
     type: application
     urls:
     - https://NavyaEmplay.github.io/Self-Heal/cpu-usage-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-19T11:29:08.169909713+05:30"
+  disk-usage:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-19T13:25:31.359003016+05:30"
+    description: Self-heal Disk monitoring CronJob (kubelet stats summary)
+    digest: 3df66e370ec84d5d038b0d69b109decfebd415840c34b72c3c20ae0e090ac730
+    name: disk-usage
+    type: application
+    urls:
+    - https://NavyaEmplay.github.io/Self-Heal/disk-usage-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-01-19T13:25:31.358125511+05:30"
