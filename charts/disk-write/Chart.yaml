@@ -1,0 +1,6 @@
+apiVersion: v2
+name: disk-write
+description: Self-heal Disk Write CronJob (writes test file to host /tmp)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

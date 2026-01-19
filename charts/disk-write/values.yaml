@@ -1,0 +1,34 @@
+schedule: "0 */6 * * *"   # every 6 hours
+
+image:
+  repository: alpine
+  tag: "3.20"
+
+config:
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "10"
+  COOLDOWN_PERIOD: "7200"
+  LOG_DIR: "/opt/logs"
+  TEST_PATH: "/host/tmp"
+  KEEP_FILE: "1"
+
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][DiskWrite]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""   # set during helm install
+
+persistence:
+  state:
+    size: 5Mi
+
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"
+
+hostTmp:
+  hostPath: "/tmp"
