@@ -1,0 +1,6 @@
+apiVersion: v2
+name: disk-usage
+description: Self-heal Disk monitoring CronJob (kubelet stats summary)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
