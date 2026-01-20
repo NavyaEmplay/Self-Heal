@@ -1,0 +1,32 @@
+schedule: "*/5 * * * *"
+
+image:
+  repository: debian
+  tag: bullseye-slim
+
+config:
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "10"
+  COOLDOWN_PERIOD: "600"
+  LOG_DIR: "/opt/logs"
+
+  NETWORK_TARGET_URL: "https://www.google.com"
+  CURL_TIMEOUT: "5"
+
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][Network]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""
+
+persistence:
+  state:
+    size: 5Mi
+
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"

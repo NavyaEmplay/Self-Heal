@@ -3,9 +3,9 @@ entries:
   cpu-precheck:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-20T12:21:02.048373767+05:30"
+    created: "2026-01-20T12:44:44.010019021+05:30"
     description: Precheck CPU monitoring CronJob (kubectl top nodes)
-    digest: fbf82de823951067258750f90cd0ab9192cea6557f62997520c01174a44e0795
+    digest: 596821eeadf6c77b94c1f7901adc7c479e866a7cb193d846e114e0b98f0d5f4f
     name: cpu-precheck
     type: application
     urls:
@@ -14,9 +14,9 @@ entries:
   cpu-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-20T12:21:02.048732647+05:30"
+    created: "2026-01-20T12:44:44.01044429+05:30"
     description: Self-heal CPU monitoring CronJob (kubectl top nodes)
-    digest: 09b57a27a54553e4254d375f70a246ceae6c7c62846f8b97981b3c7cd3dd2ffc
+    digest: bd4c2ff1208c1e3b0d083a2b79fa3cdcf683fda9a2699598e5ffda0a581c9c98
     name: cpu-usage
     type: application
     urls:
@@ -25,9 +25,9 @@ entries:
   disk-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-20T12:21:02.049099261+05:30"
+    created: "2026-01-20T12:44:44.011320867+05:30"
     description: Self-heal Disk monitoring CronJob (kubelet stats summary)
-    digest: ebb4ebae3f633b12c845585a2493a2d8a0a2147829ba90a2de07092edf8f5fc6
+    digest: a0f58de35cda70f92da00d8d552a21b74242e91668ec088fc2e582987ebeb784
     name: disk-usage
     type: application
     urls:
@@ -36,9 +36,9 @@ entries:
   disk-write:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-20T12:21:02.049433636+05:30"
+    created: "2026-01-20T12:44:44.011728081+05:30"
     description: Self-heal Disk Write CronJob (writes test file to host /tmp)
-    digest: 6b783e216db765d901bb9dcdc5d7b39b5cafcf813e72ce20604ed8af7810cb3c
+    digest: c233f8f626ade9c2816a06b28a1fb424d48340acb7d28df41725e9d17975bfc8
     name: disk-write
     type: application
     urls:
@@ -47,10 +47,10 @@ entries:
   memory-alert:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-20T12:21:02.049771717+05:30"
+    created: "2026-01-20T12:44:44.012158861+05:30"
     description: Self-heal Memory monitoring CronJob (kubectl top nodes + retries
       + cooldown + logs)
-    digest: cdb800deae2e3e3ec02a7be4d2e42d72592a25482cd5a846b9b7a75b9a2fb77f
+    digest: cf30a0a7ab1b46a27b65e84b380d7a271608fe71e6fbd1c8101cb11f58d6aeb9
     name: memory-alert
     type: application
     urls:
@@ -59,13 +59,25 @@ entries:
   memory-precheck:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-20T12:21:02.050553977+05:30"
+    created: "2026-01-20T12:44:44.012541808+05:30"
     description: Self-heal Memory precheck CronJob (kubectl top nodes + retries +
       cooldown + email + logs)
-    digest: 9bde7dd11cf975358799dd6b2e95f7065140bc787bda14dc70e528cabf001585
+    digest: be3eaca008ae4e578fd6854e40de88b46d921a7aa34294fcb8f09caf0fd03285
     name: memory-precheck
     type: application
     urls:
     - https://NavyaEmplay.github.io/Self-Heal/memory-precheck-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-20T12:21:02.047908828+05:30"
+  netcheck:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-20T12:44:44.012831135+05:30"
+    description: Self-heal network connectivity CronJob (curl + retries + cooldown
+      + email + logs)
+    digest: 401faa9273e27d8792ba04e0cbf22fe2de1de36c850402390501a147a3f6ecb4
+    name: netcheck
+    type: application
+    urls:
+    - https://NavyaEmplay.github.io/Self-Heal/netcheck-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-01-20T12:44:44.009492036+05:30"
