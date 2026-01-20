@@ -1,0 +1,30 @@
+schedule: "*/10 * * * *"
+
+image:
+  repository: python
+  tag: 3.11-slim
+
+config:
+  RETRY_COUNT: "10"
+  RETRY_INTERVAL: "30"
+  COOLDOWN_PERIOD: "7200"
+  MEMORY_THRESHOLD: "65"
+  LOG_DIR: "/opt/logs"
+
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][Memory]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""
+
+persistence:
+  state:
+    size: 5Mi
+
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"

@@ -3,9 +3,9 @@ entries:
   cpu-precheck:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-19T17:16:06.016411085+05:30"
+    created: "2026-01-20T12:01:54.279012946+05:30"
     description: Precheck CPU monitoring CronJob (kubectl top nodes)
-    digest: cb414bba998c4d5e8be7d272e9c3fcf0e69ae0e83bccc4265d321027b0aa6fb8
+    digest: 344fa20658f9eb4aaaff9fdef794497ba2e00ece7b191c2c43494b5364dd644d
     name: cpu-precheck
     type: application
     urls:
@@ -14,9 +14,9 @@ entries:
   cpu-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-19T17:16:06.016749736+05:30"
+    created: "2026-01-20T12:01:54.279359425+05:30"
     description: Self-heal CPU monitoring CronJob (kubectl top nodes)
-    digest: 1fcfc9e1fc4d6546979ca384b2f039b9e2279121b2ce155b8db9813a19eae843
+    digest: 803e698c3449671c7e82690328971c3b6737516a8b610fa55c2aae2b0879e314
     name: cpu-usage
     type: application
     urls:
@@ -25,9 +25,9 @@ entries:
   disk-usage:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-19T17:16:06.017085533+05:30"
+    created: "2026-01-20T12:01:54.279765694+05:30"
     description: Self-heal Disk monitoring CronJob (kubelet stats summary)
-    digest: a07e7df3fb83b36007a5da1872f316998e5e7edbf23872f76d6734ada62be0f5
+    digest: 1a6e924aa3e42367d9d700b76d4c8238eeec99a4481345509f8d2c4a010f2eb5
     name: disk-usage
     type: application
     urls:
@@ -36,12 +36,24 @@ entries:
   disk-write:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-19T17:16:06.017393812+05:30"
+    created: "2026-01-20T12:01:54.280116832+05:30"
     description: Self-heal Disk Write CronJob (writes test file to host /tmp)
-    digest: fcc68bc173173acc28e599a8f2bedccf42073f3fefe99ef570dc1d4e7f16b54f
+    digest: 93316a2a8bc53d63c91cb5ed05966c5c23c18eaeb903c562218c8a4b9d8eda4a
     name: disk-write
     type: application
     urls:
     - https://NavyaEmplay.github.io/Self-Heal/disk-write-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-19T17:16:06.016001993+05:30"
+  memory-alert:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-20T12:01:54.280440488+05:30"
+    description: Self-heal Memory monitoring CronJob (kubectl top nodes + retries
+      + cooldown + logs)
+    digest: 1c7a3c1f259167785defea7b74234903f1247722c9a2a95bab9e6d1682c29897
+    name: memory-alert
+    type: application
+    urls:
+    - https://NavyaEmplay.github.io/Self-Heal/memory-alert-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-01-20T12:01:54.278633807+05:30"

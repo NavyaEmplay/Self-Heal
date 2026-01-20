@@ -1,0 +1,7 @@
+apiVersion: v2
+name: memory-alert
+description: Self-heal Memory monitoring CronJob (kubectl top nodes + retries + cooldown + logs)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
