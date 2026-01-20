@@ -1,0 +1,35 @@
+schedule: "*/5 * * * *"
+
+image:
+  repository: python
+  tag: 3.11-slim
+  pullPolicy: IfNotPresent
+
+config:
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "10"
+  COOLDOWN_PERIOD: "7200"
+  LOG_DIR: "/opt/logs"
+
+  # Labels to find nginx ingress controller pods
+  # If you installed via minikube addon or ingress-nginx helm, namespace is usually ingress-nginx.
+  NGINX_NAMESPACE: "ingress-nginx"
+  NGINX_LABEL_SELECTOR: "app.kubernetes.io/name=ingress-nginx"
+
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][Nginx]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""   # pass during helm install
+
+persistence:
+  state:
+    size: 5Mi
+
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"

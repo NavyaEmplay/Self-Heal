@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nginx-check
+description: Self-heal nginx ingress controller readiness checker with retries, cooldown, email alerts, shared logs
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
