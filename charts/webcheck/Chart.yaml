@@ -1,0 +1,6 @@
+apiVersion: v2
+name: webcheck
+description: Self-heal WebDown monitor (curl URL, restart deployment, email alert, logs to PVC)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -1,0 +1,46 @@
+schedule: "*/2 * * * *"
+
+image:
+  # ✅ default works everywhere (no private pull issues)
+  repository: python
+  tag: "3.11-slim"
+  pullPolicy: IfNotPresent
+
+# If you use private ECR and need secret, add like this:
+# imagePullSecrets:
+#   - ecr-pull
+imagePullSecrets: []
+
+config:
+  URL_TO_CHECK: "http://test-webapp-service:5678"
+  TIMEOUT_DURATION: "5"
+  RETRY_COUNT: "3"
+  RETRY_INTERVAL: "2"
+  COOLDOWN_PERIOD: "300"
+
+  WEB_DEPLOYMENT_NAME: "test-webapp"
+  WEB_DEPLOYMENT_NAMESPACE: "default"
+
+  LOG_DIR: "/opt/logs"
+
+  EMAIL_ENABLED: "true"
+  EMAIL_SUBJECT_PREFIX: "[Self-Heal][WebApp]"
+  EMAIL_FROM: "qa_emplay@emplay.net"
+  EMAIL_TO: "nandhini.s@emplay.net,navya.sri@emplay.net"
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USERNAME: "qa_emplay@emplay.net"
+
+secrets:
+  SMTP_PASSWORD: ""   # pass during install
+
+persistence:
+  state:
+    size: 1Mi
+
+sharedLogsPVC:
+  name: "self-heal-logs-pvc"
+
+# Optional: deploy test webapp from this chart
+testWebApp:
+  enabled: true
